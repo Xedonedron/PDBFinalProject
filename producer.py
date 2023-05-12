@@ -1,27 +1,58 @@
 import tweepy
-import pandas as pd
-from json import dumps
 from kafka import KafkaProducer
+import logging
+import json
 
-# API token
-CONSUMER_KEY = "5OBZDcObonT3Pdf9du705G5KP"
-CONSUMER_SECRET = "24qgOlLKmywVLeID6FV0IHNscyPt1mTcWeXA5M8tDDV6bngvJt"
-ACCESS_TOKEN = "1266772148875489282-AhXazdXEk0gMfT5V9tRtGSy6pLGIP5"
-ACCESS_TOKEN_SECRET = "IziL7kVEUNF8KwgQVVAMWxhPLA4xNaZN1lbKDkVG3PE7W"
+"""API ACCESS KEYS"""
+consumerKey = 'QnupptSEsqShuukhaPGsk0Svf'
+consumerSecret = "HuD4bnPtEZcE1IVFDcluzuYcngbSMMYxKyfYA8MTXPUYZvn4N0"
+accessToken = '1390698546353999878-KExzyOWL2qm1zfmxZdrYmcnkaVbjue'
+accessTokenSecret = 'dkEkoVa4QwW3Z8Rzvau6r37C7DhnUPU2zu91P6GZmm7Ec'
+bearerToken = 'AAAAAAAAAAAAAAAAAAAAALP5cAEAAAAACkdJeE7i23YH3L4qeYWpvoeqZAA%3DoOefkiPYcftGrIzdm9YgPi7hnYrI6ymuojs6031Dd5K5U7CWul'
 
-auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-producer = KafkaProducer(bootstrap_servers=['localhost:9092'],value_serializer=lambda K:dumps(K).encode('utf-8'))
+logging.basicConfig(level=logging.INFO)
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+search_term = 'cupid'
+topic_name = 'twitter'
 
-api = tweepy.API(auth) # API auth
-tweets = tweepy.Cursor(api.search_tweets, q=["cupid"], tweet_mode='extended').items(100) # nyari tweets
-result = []
 
-# Untuk ambil tweets trus export ke txt
-for tweet in tweets:
-    print(tweet.full_text)
-    result.append(tweet.full_text)
-    producer.send('twitter', tweet.full_text)
+def twitterAuth():
+    # create the authentication object
+    authenticate = tweepy.OAuthHandler(consumerKey, consumerSecret)
+    # set the access token and the access token secret
+    authenticate.set_access_token(accessToken, accessTokenSecret)
+    authenticate.secure = True
+    # create the API object
+    api = tweepy.API(authenticate, wait_on_rate_limit=True)
+    return api
 
-df = pd.DataFrame({'tweets': result})
-df.to_csv('tweets.txt', index=False, sep='\t', header=False)
+
+class TweetListener(tweepy.StreamingClient):
+
+    def on_data(self, raw_data):
+        logging.info(raw_data)
+
+        tweet = json.loads(raw_data)
+
+        if tweet['data']:
+            data = {
+                'message': tweet['data']['text'].replace(',', '')
+            }
+            producer.send(topic_name, value=json.dumps(data).encode('utf-8'))
+
+        return True
+
+    @staticmethod
+    def on_error(status_code):
+        if status_code == 420:
+            # returning False in on_data disconnects the stream
+            return False
+
+    def start_streaming_tweets(self, search_term):
+        self.add_rules(tweepy.StreamRule(search_term))
+        self.filter()
+
+
+if __name__ == '__main__':
+    twitter_stream = TweetListener(bearerToken)
+    twitter_stream.start_streaming_tweets(search_term)
