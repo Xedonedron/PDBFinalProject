@@ -19,7 +19,8 @@ Before you run your real-time sentiment analysis tweet, you should create a topi
 5. Run a producer to get streaming tweet
 Make sure you have changed the ```search_term``` for your own analysis, you can start streaming the Twitter data by run the producer.py (```python producer.py```)
 6. Time for explode your console
-This is the last step, you can execute the consumer.ipynb for start streaming the data from the topic created before to the Spark for sentiment analysis.
+This is the last step, you can run the ```consumer.ipynb``` for start streaming the data from the topic created before to the Spark for sentiment analysis.
+*Note: You can save the result locally by executing the ```consumer_local.ipynb```, it will generate the JSON file that contains the clean tweet and also with the sentiment analysis.
 
 ## Untuk pengembangan berikutnya
 Sebelum finalisasi, kami berpikir bahwa data yang sudah dilakukan sentimen analisis secara real-time dari data streaming Twitter ini bisa divisualisasikan secara otomatis juga dengan cara menggunakan ```Apache Airflow``` untuk diintegrasikan dengan ```Tableau/PowerBI```, serta data yang disimpan di dalam topic Kafka lebih baik disimpan ke dalam HDFS secara otomatis dengan menjadikan HDFS sebagai consumer atau menggunakan library ```pydoop, snakebite, hdfs```.
