@@ -1,5 +1,6 @@
-# PDB Final Project
-## Twitter Sentiment Analysis
+# Sentiment Analysis on Tweet Data - Python, Pandas, PySpark, Kafka
+
+## PDB Subject Project
 This is a Final Project repository for Pengolahan Data Besar subject, doing sentiment analysis on twitter data streams to find iut public reaction to the latest films, we are using Twitter API for pull the tweet into Kafka, and send it to Spark for sentiment analysis.
 
 ## Prerequisite:
